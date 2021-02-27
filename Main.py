@@ -6,7 +6,6 @@ import re
 import aiohttp
 from datetime import datetime
 from discord.ext import commands
-from pyrandmeme import *
 
 intents = discord.Intents().all()
 intents.members = True
@@ -15,6 +14,7 @@ client = commands.Bot(command_prefix='!', intents=intents)
 client.remove_command("help")
 token = "Your_Bot_Token"
 
+invites = {}
 
 @client.event
 async def on_member_join(member):
@@ -23,12 +23,41 @@ async def on_member_join(member):
 
     role = member.guild.get_role(your_member_role)
     await member.add_roles(role)
+    
+    invites_before_join = invites[member.guild.id]
+    invites_after_join = await member.guild.invites()
+
+    for invite in invites_before_join:
+      
+        if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
+
+            joinEmbed = discord.Embed(
+                title=f"{member} joined", description=f"Account Created on: `{member.created_at}` \n Invite Used: `{invite.code}` \n Invited by: `{invite.inviter}`", color=0xa333cc
+            )
+
+            await wlcmChannel.send(embed=joinEmbed)
+
+            invites[member.guild.id] = invites_after_join
+
+            return
+        
+@client.event
+async def on_member_remove(member):
+    invites[member.guild.id] = await member.guild.invites()
 
 
 @client.event
 async def on_ready():
     print(f'Bot connected as {client.user}')
     await client.change_presence(activity=discord.Game('Helping FarmTech Members'))
+    
+    for guild in client.guilds:
+        invites[guild.id] = await guild.invites()
+        
+def find_invite_by_code(invite_list, code):
+    for inv in invite_list:
+        if inv.code == code:
+            return inv
 
 ######################################### Kick Command #######################################
 @client.command()
