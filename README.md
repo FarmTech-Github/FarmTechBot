@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 This project is a Discord bot developed for use on the FarmTech Discord Server. It provides numerous utilities
-and other tools for the server. Feel free to use the bot for your own purposes.
+and other tools for the server.
 
 Read the [Contributing Guide](https://github.com/FarmTech-Github/FarmTechBot/blob/main/Contributing.md) if you're interested in helping out.
 
