@@ -12,7 +12,7 @@ intents.members = True
 
 client = commands.Bot(command_prefix='!', intents=intents)
 client.remove_command("help")
-token = "Your_Bot_Token_from_Discord"
+token = "ODE1MTkzNDkxMjM5MjA2OTYy.YDo2GQ.TyjDTFVKaXvZ_BsYJar_0fu3k0Y"
 
 invites = {}
 
@@ -199,7 +199,7 @@ async def embed(ctx, channel, title, *, message):
     await channel.send(embed=embed)
 
 ######################################## Eval Command ####################################
- @client.command(pass_context=True, hidden=True, name='eval')
+@client.command(pass_context=True, hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
         """Evaluates a code"""
 
@@ -256,7 +256,46 @@ async def meme(ctx):
             res = await r.json()
             embed.set_image(url=res['data']['children'] [random.randint(0, 25)]['data']['url'])
             await ctx.send(embed=embed, content=None)
-    
+
+######################################## Hack Command #####################################
+@client.command(pass_context=True)
+async def hack(ctx, member:discord.Member = None):
+    if not member:
+        await ctx.send("Please specify a member")
+        return
+
+    passwords=['imnothackedlmao','sendnoodles63','ilovenoodles','icantcode','christianmicraft','server','icantspell','hackedlmao','WOWTONIGHT','69'] 
+    fakeips=['154.2345.24.743','255.255. 255.0','356.653.56','101.12.8.6053','255.255. 255.0']
+
+    embed=discord.Embed(title=f"**Hacking: {member}** 0%", color=0x2f3136)
+    m = await ctx.send(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 19%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 34%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 55%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 67%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 84%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 99%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(1)
+    embed=discord.Embed(title=f"**Hacking: {member}** 100%", color=0x2f3136)
+    await m.edit(embed=embed)
+    time.sleep(3)
+    embed=discord.Embed(title=f"{member} info ", description=f"*Email `{member}@hacked.com` Password `{random.choice(passwords)}`  IP `{random.choice(fakeips)}`*", color=0x2f3136)
+    embed.set_footer(text="This is a joke pls dont worry haha. All the above given is fake")
+    await m.edit(embed=embed)
+    time.sleep(1)
+
 ######################################## Help Command #####################################
 @client.command()
 async def help(ctx):
@@ -275,6 +314,8 @@ async def help(ctx):
         name="`!ping`", value="To find out ping", inline=True)
     help_embed.add_field(
         name="`!meme`", value="You know what this does", inline=True)
+    help_embed.add_field(
+        name="`!hack`", value="Hack your friends with this command", inline=True)
     
     help_embed.add_field(name="2. Mod Commands",
                          value="Commands only Mod/Admin/Head can use", inline=False)
@@ -293,7 +334,7 @@ async def help(ctx):
         name="`!nuke`", value="To nuke a channel", inline=True)
     help_embed.add_field(
         name="`!embed`", value="To send an embed", inline=True)
-    
+
     help_embed.set_footer(
         text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
     await ctx.send(embed=help_embed)
