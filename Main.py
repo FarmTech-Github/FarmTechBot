@@ -295,6 +295,55 @@ async def hack(ctx, member:discord.Member = None):
     embed.set_footer(text="This is a joke pls dont worry haha. All the above given is fake")
     await m.edit(embed=embed)
     time.sleep(1)
+ 
+################################################ Server Info Command ####################################################       
+@client.command()
+async def server(ctx):
+        """Shows server info"""
+
+        server = ctx.guild
+
+        roles = str(len(server.roles))
+        emojis = str(len(server.emojis))
+        channels = str(len(server.channels))
+
+        embeded = discord.Embed(title=server.name, description='Server Info', color=discord.Colour.blurple())
+        embeded.set_thumbnail(url=server.icon_url)
+        embeded.add_field(name="Created on:", value=server.created_at.strftime('%d %B %Y at %H:%M UTC+3'), inline=False)
+        embeded.add_field(name="Server ID:", value=server.id, inline=False)
+        embeded.add_field(name="Users on server:", value=server.member_count, inline=True)
+        embeded.add_field(name="Server owner:", value=server.owner, inline=True)
+
+        embeded.add_field(name="Server Region:", value=server.region, inline=True)
+        embeded.add_field(name="Verification Level:", value=server.verification_level, inline=True)
+
+        embeded.add_field(name="Role Count:", value=roles, inline=True)
+        embeded.add_field(name="Emoji Count:", value=emojis, inline=True)
+        embeded.add_field(name="Channel Count:", value=channels, inline=True)
+
+        await ctx.send(embed=embeded)
+
+############################################# User Info Command ###############################################
+@client.command()
+async def user(ctx, *, user: discord.Member = None):
+
+        if user is None:
+            user = ctx.author
+
+        embed = discord.Embed(
+            colour=discord.Colour.dark_green(),
+            title=f"{user.name}'s Stats and Information."
+        )
+        embed.set_footer(text=f"ID: {user.id}")
+        embed.set_thumbnail(url=user.avatar_url_as(format="png"))
+        embed.add_field(name="__**General information:**__", value=f"**Discord Name:** {user.name}\n"
+                                                                   f"**Account created:** {user.created_at.__format__('%A %d %B %Y at %H:%M')}\n"
+                                                                   f"**Status:** {user.status}\n"
+                                                                   f"**Activity:** {user.activity}", inline=False)
+        embed.add_field(name="__**Server-related information:**__", value=f"**Nickname:** {user.nick}\n"
+                                                                          f"**Joined server:** {user.joined_at.__format__('%A %d %B %Y at %H:%M')}\n"
+                                                                          f"**Roles:** {' '.join([r.mention for r in user.roles[1:]])}")
+        return await ctx.send(embed=embed)
 
 ######################################## Help Command #####################################
 @client.command()
