@@ -77,6 +77,25 @@ async def kick(ctx, user: discord.Member, *, reason=None):
         await user.kick(reason=reason)
         await ctx.send(f"{user} have been kicked sucessfully because {reason}")
 
+    mod_channel = client.get_channel(mod_chnl)
+
+    kick_embed = discord.Embed(title="Kick", color=discord.Color.dark_orange())
+    kick_embed.add_field(
+        name=f"{user} was kicked by", value=ctx.message.author, inline=False)
+    kick_embed.add_field(
+        name=f"{user} was kicked for", value=reason, inline=False)
+    kick_embed.set_footer(
+        text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
+
+    await mod_channel.send(embed=kick_embed)
+
+    await user.send(embed=discord.Embed(
+        title='You Have Been Kicked From {}'.format(ctx.guild),
+        description='**{}** Has Kicked You From this server.\n**Reason:**\n```{}```'.format(
+            ctx.author.mention, reason),
+        color=discord.Color.red()
+    ).set_thumbnail(url=ctx.author.avatar_url))
+
 ################################### Ban Command ########################################
 
 
@@ -210,6 +229,8 @@ async def ping(ctx):
 @client.command()
 async def echo(ctx, *, arg):
     await ctx.send(arg)
+
+###################################### Addrole Command ######################################
 
 
 @client.command()
@@ -494,10 +515,26 @@ async def help(ctx):
         name="`!nuke`", value="To nuke a channel", inline=True)
     help_embed.add_field(
         name="`!embed`", value="To send an embed", inline=True)
+    help_embed.add_field(
+        name="`!uptime`", value="To find out the uptime of the bot", inline=True)
 
     help_embed.set_footer(
         text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
     await ctx.send(embed=help_embed)
+
+######################################### Uptime Command ########################################
+
+@client.command(pass_context=True)
+async def uptime(ctx):
+    now = datetime.utcnow()
+    elapsed = now - starttime
+    seconds = elapsed.seconds
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    await ctx.send("Running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
+
+
+starttime = datetime.utcnow()
 
 ######################################### Client Run ########################################
 client.run(bot_token)
