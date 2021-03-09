@@ -4,6 +4,8 @@ import time
 import random
 import re
 import aiohttp
+
+from config import bot_token, join_role, wlcm_chnl, mod_chnl, poll_chnl
 from datetime import datetime
 from discord.ext import commands
 
@@ -12,17 +14,16 @@ intents.members = True
 
 client = commands.Bot(command_prefix='!', intents=intents)
 client.remove_command("help")
-token = "Your_Discord_bot_token"
 
 invites = {}
 
 
 @client.event
 async def on_member_join(member):
-    wlcmChannel = client.get_channel(Your_welcome_channel)
+    wlcmChannel = client.get_channel(wlcm_chnl)
     await wlcmChannel.send(f'Welcome {member.mention}........To the official FarmTech Server')
 
-    role = member.guild.get_role(your_member_role)
+    role = member.guild.get_role(join_role)
     await member.add_roles(role)
 
     invites_before_join = invites[member.guild.id]
@@ -90,7 +91,7 @@ async def ban(ctx, user: discord.Member, *, reason=None):
         await user.ban(reason=reason)
         await ctx.send(f"{user} have been bannned sucessfully because of {reason}")
 
-    mod_channel = client.get_channel(mod_log_channel)
+    mod_channel = client.get_channel(mod_chnl)
 
     ban_embed = discord.Embed(title="Ban", color=0xe44225)
     ban_embed.add_field(
@@ -118,7 +119,7 @@ async def unban(ctx, *, user):
     await ctx.send(f"Unbanned {user}")
 
     member_mention = await client.fetch_user(member)
-    mod_channel = client.get_channel(mod_log_channel)
+    mod_channel = client.get_channel(mod_chnl)
 
     unban_embed = discord.Embed(title="Unban", color=0xe44225)
     unban_embed.add_field(
@@ -143,7 +144,7 @@ async def unbanMember(ctx, *, member):
             await ctx.guild.unban(user)
             await ctx.channel.send(f"Unbanned {user.mention}")
 
-    mod_channel = client.get_channel(mod_log_channel)
+    mod_channel = client.get_channel(mod_chnl)
 
     unban_embed = discord.Embed(title="Unban", color=0xe44225)
     unban_embed.add_field(
@@ -165,7 +166,7 @@ async def poll(ctx, *, message):
     polls.set_footer(
         text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
 
-    pollsChannel = client.get_channel(poll_channel)
+    pollsChannel = client.get_channel(poll_chnl)
 
     reactmsg = await pollsChannel.send(embed=polls)
     await reactmsg.add_reaction("👍")
@@ -237,8 +238,6 @@ async def embed(ctx):
 
     await ctx.send("What is your Message?")
 
-    def is_correct(m):
-        return m.author.id == ctx.author.id
     try:
         message = await client.wait_for('message', check=is_correct, timeout=20.0)
     except:
@@ -246,8 +245,6 @@ async def embed(ctx):
 
     await ctx.send("What colour should it be?")
 
-    def is_correct(m):
-        return m.author.id == ctx.author.id
     try:
         color = await client.wait_for('message', check=is_correct, timeout=20.0)
     except:
@@ -259,8 +256,6 @@ async def embed(ctx):
 
     await ctx.send("Where should we send it? [Use the channel ID]")
 
-    def is_correct(m):
-        return m.author.id == ctx.author.id
     try:
         channel = await client.wait_for('message', check=is_correct, timeout=20.0)
     except:
@@ -505,4 +500,4 @@ async def help(ctx):
     await ctx.send(embed=help_embed)
 
 ######################################### Client Run ########################################
-client.run(token)
+client.run(bot_token)
