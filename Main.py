@@ -12,7 +12,7 @@ intents.members = True
 
 client = commands.Bot(command_prefix='!', intents=intents)
 client.remove_command("help")
-token = "Your_Bot_Token_from_Discord"
+token = "Your_Discord_bot_token"
 
 invites = {}
 
@@ -274,7 +274,6 @@ async def embed(ctx):
 
 ######################################## Eval Command ####################################
 
-
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
     if isinstance(body[-1], ast.Expr):
@@ -290,54 +289,52 @@ def insert_returns(body):
     if isinstance(body[-1], ast.With):
         insert_returns(body[-1].body)
 
+@client.command(pass_context=True, hidden=True, name='eval')
+    async def _eval(self, ctx, *, body: str):
+        """Evaluates a code"""
 
-@client.command()
-async def eval(ctx, *, cmd):
-    """Evaluates input.
-    Input is interpreted as newline seperated statements.
-    If the last statement is an expression, that is the return value.
-    Usable globals:
-      - `bot`: the bot instance
-      - `discord`: the discord module
-      - `commands`: the discord.ext.commands module
-      - `ctx`: the invokation context
-      - `__import__`: the builtin `__import__` function
-    Such that `>eval 1 + 1` gives `2` as the result.
-    The following invokation will cause the bot to send the text '9'
-    to the channel of invokation and return '3' as the result of evaluating
-    >eval ```
-    a = 1 + 2
-    b = a * 2
-    await ctx.send(a + b)
-    a
-    ```
-    """
-    fn_name = "_eval_expr"
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message,
+            '_': self._last_result
+        }
 
-    cmd = cmd.strip("` ")
+        env.update(globals())
 
-    # add a layer of indentation
-    cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
+        body = self.cleanup_code(body)
+        stdout = io.StringIO()
 
-    # wrap in async def body
-    body = f"async def {fn_name}():\n{cmd}"
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
 
-    parsed = ast.parse(body)
-    body = parsed.body[0].body
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
 
-    insert_returns(body)
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = stdout.getvalue()
+            try:
+                await ctx.message.add_reaction('\u2705')
+            except:
+                pass
 
-    env = {
-        'bot': ctx.bot,
-        'discord': discord,
-        'commands': commands,
-        'ctx': ctx,
-        '__import__': __import__
-    }
-    exec(compile(parsed, filename="<ast>", mode="exec"), env)
-
-    result = (await eval(f"{fn_name}()", env))
-    await ctx.send(result)
+            if ret is None:
+                if value:
+                    await ctx.send(f'```py\n{value}\n```')
+            else:
+                self._last_result = ret
+                await ctx.send(f'```py\n{value}{ret}\n```')
 
 ######################################### Meme Command ####################################
 
@@ -428,7 +425,7 @@ async def user(ctx, *, user: discord.Member = None):
 
         embed = discord.Embed(
             colour=discord.Colour.dark_green(),
-            title=f"{user.name}'s (Nickname: {user.nick}) Stats and Information."
+        title=f"{user.name}'s (Nickname: {user.nick}) Stats and Information."
         )
         embed.set_footer(text=f"ID: {user.id}")
         embed.set_thumbnail(url=user.avatar_url_as(format="png"))
@@ -459,6 +456,7 @@ async def on_message_delete(ctx, message):
     global mod_channel
     await mod_channel.send(delete_embed)
 
+
 ######################################## Help Command #####################################
 
 
@@ -480,6 +478,9 @@ async def help(ctx):
     help_embed.add_field(
         name="`!meme`", value="You know what this does", inline=True)
 
+    help_embed.add_field(
+        name="`!hack`", value="Hack your friends with this command", inline=True)
+    
     help_embed.add_field(name="2. Mod Commands",
                          value="Commands only Mod/Admin/Head can use", inline=False)
     help_embed.add_field(name="`!ban`", value="To ban a user", inline=True)
