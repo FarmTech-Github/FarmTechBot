@@ -17,6 +17,8 @@ client.remove_command("help")
 
 invites = {}
 
+######################################### When user joins #######################################
+
 
 @client.event
 async def on_member_join(member):
@@ -48,6 +50,7 @@ async def on_member_join(member):
 async def on_member_remove(member):
     invites[member.guild.id] = await member.guild.invites()
 
+######################################### On ready #######################################
 
 @client.event
 async def on_ready():
@@ -146,7 +149,7 @@ async def unban(ctx, *, user):
     unban_embed.set_footer(
         text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
 
-###################################### Unban using ID Command #####################################
+###################################### Unban using ID Command (Just for backup) #####################################
 
 
 @client.command(pass_context=True)
@@ -171,6 +174,9 @@ async def unbanMember(ctx, *, member):
     unban_embed.set_footer(
         text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
     await mod_channel.send(embed=unban_embed)
+
+################################### Mute Command #######################################
+
 
 @client.command()
 async def mute(ctx, members: commands.Greedy[discord.Member], mute_minutes: int = 10, *, reason: str = "None"):
@@ -548,6 +554,7 @@ async def help(ctx):
 
 ######################################### Uptime Command ########################################
 
+
 @client.command(pass_context=True)
 async def uptime(ctx):
     now = datetime.utcnow()
@@ -555,7 +562,7 @@ async def uptime(ctx):
     seconds = elapsed.seconds
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
-    await ctx.send("Running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
+    await ctx.send("I have been online for `{}d {}h {}m {}s` since my last restart".format(elapsed.days, hours, minutes, seconds))
 
 
 starttime = datetime.utcnow()
