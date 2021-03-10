@@ -172,6 +172,30 @@ async def unbanMember(ctx, *, member):
         text=f"{ctx.guild.name}  •  {datetime.strftime(datetime.now(), '%d.%m.%Y at %I:%M %p')}")
     await mod_channel.send(embed=unban_embed)
 
+@client.command()
+async def mute(ctx, members: commands.Greedy[discord.Member], mute_minutes: int = 10, *, reason: str = "None"):
+    """Mass mute members with an optional mute_minutes parameter to time it"""
+
+    if not members:
+        await ctx.send("You need to name someone to mute")
+        return
+
+    muted_role = get(ctx.guild.roles, name="Muted")
+
+    for member in members:
+        if ctx.author.bot == member:
+            embed = discord.Embed(
+                title="You can't mute me, Your not worthy enough")
+            await ctx.send(embed=embed)
+            continue
+        await member.add_roles(muted_role, reason=reason)
+        await ctx.send("{0.mention} has been muted by {1.mention} for *{2}*".format(member, ctx.author, reason))
+
+    if mute_minutes > 0:
+        await asyncio.sleep(mute_minutes * 60)
+        for member in members:
+            await member.remove_roles(muted_role, reason="time's up ")
+
 ################################### Poll Command #######################################
 
 
@@ -306,51 +330,51 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 @client.command(pass_context=True, hidden=True, name='eval')
-    async def _eval(self, ctx, *, body: str):
-        """Evaluates a code"""
+async def _eval(self, ctx, *, body: str):
+    """Evaluates a code"""
 
-        env = {
-            'bot': self.bot,
-            'ctx': ctx,
-            'channel': ctx.channel,
-            'author': ctx.author,
-            'guild': ctx.guild,
-            'message': ctx.message,
-            '_': self._last_result
-        }
+    env = {
+        'bot': self.bot,
+        'ctx': ctx,
+        'channel': ctx.channel,
+        'author': ctx.author,
+        'guild': ctx.guild,
+        'message': ctx.message,
+        '_': self._last_result
+    }
 
-        env.update(globals())
+    env.update(globals())
 
-        body = self.cleanup_code(body)
-        stdout = io.StringIO()
+    body = self.cleanup_code(body)
+    stdout = io.StringIO()
 
-        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+    to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
 
+    try:
+        exec(to_compile, env)
+    except Exception as e:
+        return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+
+    func = env['func']
+    try:
+        with redirect_stdout(stdout):
+            ret = await func()
+    except Exception as e:
+        value = stdout.getvalue()
+        await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+    else:
+        value = stdout.getvalue()
         try:
-            exec(to_compile, env)
-        except Exception as e:
-            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+            await ctx.message.add_reaction('\u2705')
+        except:
+            pass
 
-        func = env['func']
-        try:
-            with redirect_stdout(stdout):
-                ret = await func()
-        except Exception as e:
-            value = stdout.getvalue()
-            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        if ret is None:
+            if value:
+                await ctx.send(f'```py\n{value}\n```')
         else:
-            value = stdout.getvalue()
-            try:
-                await ctx.message.add_reaction('\u2705')
-            except:
-                pass
-
-            if ret is None:
-                if value:
-                    await ctx.send(f'```py\n{value}\n```')
-            else:
-                self._last_result = ret
-                await ctx.send(f'```py\n{value}{ret}\n```')
+            self._last_result = ret
+            await ctx.send(f'```py\n{value}{ret}\n```')
 
 ######################################### Meme Command ####################################
 
