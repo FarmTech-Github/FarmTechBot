@@ -319,68 +319,45 @@ async def embed(ctx):
     await channel.send(embed=embed)
 
 ######################################## Eval Command ####################################
-
-def insert_returns(body):
-    # insert return stmt if the last expression is a expression statement
-    if isinstance(body[-1], ast.Expr):
-        body[-1] = ast.Return(body[-1].value)
-        ast.fix_missing_locations(body[-1])
-
-    # for if statements, we insert returns into the body and the orelse
-    if isinstance(body[-1], ast.If):
-        insert_returns(body[-1].body)
-        insert_returns(body[-1].orelse)
-
-    # for with blocks, again we insert returns into the body
-    if isinstance(body[-1], ast.With):
-        insert_returns(body[-1].body)
-
-@client.command(pass_context=True, hidden=True, name='eval')
-async def _eval(self, ctx, *, body: str):
-    """Evaluates a code"""
-
+@client.command(name="eval")
+async def eval_fn(ctx, *, code):
+    language_specifiers = ["python", "py", "javascript", "js", "html", "css", "php", "md", "markdown", "go", "golang", "c", "c++", "cpp", "c#", "cs", "csharp", "java", "ruby", "rb", "coffee-script", "coffeescript", "coffee", "bash", "shell", "sh", "json", "http", "pascal", "perl", "rust", "sql", "swift", "vim", "xml", "yaml"]
+    loops = 0
+    while code.startswith("`"):
+        code = "".join(list(code)[1:])
+        loops += 1
+        if loops == 3:
+            loops = 0
+            break
+    for language_specifier in language_specifiers:
+        if code.startswith(language_specifier):
+            code = code.lstrip(language_specifier)
+    while code.endswith("`"):
+        code = "".join(list(code)[0:-1])
+        loops += 1
+        if loops == 3:
+            break
+    code = "\n".join(f"    {i}" for i in code.splitlines()) #Adds an extra layer of indentation
+    code = f"async def eval_expr():\n{code}" #Wraps the code inside an async function
+    def send(text): #Function for sending message to discord if code has any usage of print function
+        client.loop.create_task(ctx.send(text))
     env = {
-        'bot': self.bot,
-        'ctx': ctx,
-        'channel': ctx.channel,
-        'author': ctx.author,
-        'guild': ctx.guild,
-        'message': ctx.message,
-        '_': self._last_result
+        "bot": client,
+        "client": client,
+        "ctx": ctx,
+        "print": send,
+        "_author": ctx.author,
+        "_message": ctx.message,
+        "_channel": ctx.channel,
+        "_guild": ctx.guild,
+        "_me": ctx.me
     }
-
     env.update(globals())
-
-    body = self.cleanup_code(body)
-    stdout = io.StringIO()
-
-    to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
-
-    try:
-        exec(to_compile, env)
-    except Exception as e:
-        return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
-
-    func = env['func']
-    try:
-        with redirect_stdout(stdout):
-            ret = await func()
-    except Exception as e:
-        value = stdout.getvalue()
-        await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
-    else:
-        value = stdout.getvalue()
-        try:
-            await ctx.message.add_reaction('\u2705')
-        except:
-            pass
-
-        if ret is None:
-            if value:
-                await ctx.send(f'```py\n{value}\n```')
-        else:
-            self._last_result = ret
-            await ctx.send(f'```py\n{value}{ret}\n```')
+    exec(code, env)
+    eval_expr = env["eval_expr"]
+    result = await eval_expr()
+    if result:
+        await ctx.send(result)
 
 ######################################### Meme Command ####################################
 
@@ -390,7 +367,7 @@ async def meme(ctx):
     embed = discord.Embed(title="Meme", description=None)
 
     async with aiohttp.ClientSession() as cs:
-        async with cs.get('https://www.reddit.com/r/wholesomememes/new.json?sort=hot') as r:
+        async with cs.get('https://www.reddit.com/r/ProgrammerHumor/new.json?sort=hot') as r:
             res = await r.json()
             embed.set_image(url=res['data']['children']
                             [random.randint(0, 25)]['data']['url'])
