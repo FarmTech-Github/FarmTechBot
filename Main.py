@@ -8,6 +8,8 @@ import aiohttp
 from config import bot_token, join_role, wlcm_chnl, mod_chnl, poll_chnl
 from datetime import datetime
 from discord.ext import commands
+from discord.utils import get
+
 
 intents = discord.Intents().all()
 intents.members = True
@@ -226,7 +228,13 @@ async def poll(ctx, *, message):
 
 @client.command()
 async def clear(ctx, amount=1):
-    await ctx.channel.purge(limit=amount+1)
+    await ctx.channel.purge(limit=amount + 1)
+    
+####################################### Source Command ####################################
+
+@client.command()
+async def source(ctx):
+    await ctx.send("You can find all of my source code at: https://github.com/FarmTech-Github/FarmTechBot")
 
 ###################################### Nuke Command ####################################
 
@@ -263,14 +271,42 @@ async def echo(ctx, *, arg):
 ###################################### Addrole Command ######################################
 
 
+@client.command(pass_context=True)
+@commands.has_any_role("Owner")
+async def addrole(ctx, user: discord.Member, role: discord.Role):
+    await user.add_roles(role)
+    await ctx.send(f"{ctx.author.mention} has given the user {user.mention} the role `{role.name}`")
+
+####################################### Remove roles Command ####################################
+
+
+@client.command(pass_context=True)
+async def removerole(ctx, user: discord.Member, role: discord.Role):
+    await user.remove_roles(role)
+    await ctx.send(f"{ctx.author.mention} has removed the role `{role.name}` from {user.mention}")
+
+####################################### Find roles Command ####################################
+
+class MemberRoles(commands.MemberConverter):
+    async def convert(self, ctx, argument):
+        member = await super().convert(ctx, argument)
+        # Remove everyone role!
+        return [role.name for role in member.roles[1:]]
+
+
 @client.command()
-async def addrole(ctx, *, member: discord.Member = None, role: discord.Role):
+async def roles(ctx, *, member: MemberRoles):
+    """Tells you a member's roles."""
+    await ctx.send('I see the roles ' + ', '.join(member))
 
-    if member is None:
-        member = ctx.message.author
+####################################### Make Role Command ####################################
 
-    await member.add_roles(role)
-    await ctx.send(f'{member} has been assigned the role {role}')
+@client.command(aliases=['make_role'])
+@commands.has_permissions(manage_roles=True)
+async def create_role(ctx, *, name):
+	guild = ctx.guild
+	await guild.create_role(name=name)
+	await ctx.send(f'Role `{name}` has been created')
 
 ####################################### Embed Command ####################################
 
@@ -425,7 +461,7 @@ async def server(ctx):
 
         embeded = discord.Embed(title=server.name, description='Server Info', color=discord.Colour.blurple())
         embeded.set_thumbnail(url=server.icon_url)
-        embeded.add_field(name="Created on:", value=server.created_at.strftime('%d %B %Y at %H:%M UTC+3'), inline=False)
+        embeded.add_field(name="Created on:", value=server.created_at.strftime('%d %B %Y at %H:%M UTC+4'), inline=False)
         embeded.add_field(name="Server ID:", value=server.id, inline=False)
         embeded.add_field(name="Users on server:", value=server.member_count, inline=True)
         embeded.add_field(name="Server owner:", value=server.owner, inline=True)
@@ -507,6 +543,7 @@ async def help(ctx):
     help_embed.add_field(name="2. Mod Commands",
                          value="Commands only Mod/Admin/Head can use", inline=False)
     help_embed.add_field(name="`!ban`", value="To ban a user", inline=True)
+    help_embed.add_field(name="`!mute`", value="To mute a user", inline=True)
     help_embed.add_field(
         name="`!clear`", value="To delete mulitple messages", inline=True)
     help_embed.add_field(name="3. Admin Commands",
