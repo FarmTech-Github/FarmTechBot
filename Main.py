@@ -181,9 +181,9 @@ async def unbanMember(ctx, *, member):
 
 
 @client.command()
+@commands.has_any_role("Mod")
 async def mute(ctx, members: commands.Greedy[discord.Member], mute_minutes: int = 10, *, reason: str = "None"):
     """Mass mute members with an optional mute_minutes parameter to time it"""
-
     if not members:
         await ctx.send("You need to name someone to mute")
         return
@@ -203,6 +203,11 @@ async def mute(ctx, members: commands.Greedy[discord.Member], mute_minutes: int 
         await asyncio.sleep(mute_minutes * 60)
         for member in members:
             await member.remove_roles(muted_role, reason="time's up ")
+
+@mute.error
+async def mute_error(ctx, error):
+    if isinstance(error, commands.MissingAnyRole):
+        await ctx.send("You do not have the permission to do that")
 
 ################################### Poll Command #######################################
 
