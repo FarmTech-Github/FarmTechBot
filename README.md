@@ -1,5 +1,7 @@
 # FarmTechBot
 
+## Note: Development has stopped for this bot and will soon be outdated due to deprecation of discord.py
+
 [![Discord][7]][8]
 [![Server][1]][1]
 [![License](https://img.shields.io/badge/license-GNU-green)](LICENSE)
